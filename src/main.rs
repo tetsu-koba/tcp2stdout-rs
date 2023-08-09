@@ -1,10 +1,9 @@
 use std::env;
-use std::io::{self, Read, Write};
+use std::io::{self, BufReader, BufWriter};
 use std::net::{TcpListener, TcpStream};
+use std::process::exit;
 use std::sync::mpsc::channel;
 use std::thread;
-use std::process::exit;
-//use ctrlc;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -24,7 +23,8 @@ fn main() {
 
     ctrlc::set_handler(move || {
         sender.send(()).unwrap();
-    }).expect("Error setting Ctrl-C handler");
+    })
+    .expect("Error setting Ctrl-C handler");
 
     thread::spawn(move || {
         receiver.recv().unwrap();
@@ -47,15 +47,11 @@ fn main() {
     }
 }
 
-fn handle_connection(mut conn: TcpStream) {
-    let mut buffer = vec![];
+fn handle_connection(conn: TcpStream) {
+    let mut reader = BufReader::new(conn);
+    let mut writer = BufWriter::new(io::stdout());
 
-    match conn.read_to_end(&mut buffer) {
-        Ok(_) => {
-            io::stdout().write_all(&buffer).expect("Error writing to stdout");
-        }
-        Err(err) => {
-            eprintln!("Error reading from connection: {}", err);
-        }
+    if let Err(err) = io::copy(&mut reader, &mut writer) {
+        eprintln!("Error reading from connection: {}", err);
     }
 }
