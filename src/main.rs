@@ -34,7 +34,8 @@ fn main() {
 
     eprintln!("Listening on {}", address);
 
-    for stream in listener.incoming() {
+    // connect only once.
+    if let Some(stream) = listener.incoming().next() {
         match stream {
             Ok(conn) => {
                 handle_connection(conn);
