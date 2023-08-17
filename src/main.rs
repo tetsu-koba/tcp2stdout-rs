@@ -35,15 +35,11 @@ fn main() {
     eprintln!("Listening on {}", address);
 
     // connect only once.
-    if let Some(stream) = listener.incoming().next() {
-        match stream {
-            Ok(conn) => {
-                handle_connection(conn);
-            }
-            Err(err) => {
-                eprintln!("Error accepting connection: {}", err);
-                exit(1);
-            }
+    match listener.incoming().next().unwrap() {
+        Ok(conn) => handle_connection(conn),
+        Err(err) => {
+            eprintln!("Error accepting connection: {}", err);
+            exit(1);
         }
     }
 }
