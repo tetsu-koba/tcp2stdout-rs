@@ -1,5 +1,5 @@
 use std::env;
-use std::io::{self, BufReader, BufWriter};
+use std::io::{self, BufReader, BufWriter, ErrorKind};
 use std::net::{TcpListener, TcpStream};
 use std::process::exit;
 use std::sync::mpsc::channel;
@@ -48,7 +48,9 @@ fn handle_connection(conn: TcpStream) {
     let mut reader = BufReader::new(conn);
     let mut writer = BufWriter::new(io::stdout());
 
-    if let Err(err) = io::copy(&mut reader, &mut writer) {
-        eprintln!("Error reading from connection: {}", err);
+    match io::copy(&mut reader, &mut writer) {
+        Ok(_) => {}
+        Err(ref e) if e.kind() == ErrorKind::BrokenPipe => {}
+        Err(e) => eprintln!("Error reading from connection: {}", e),
     }
 }
